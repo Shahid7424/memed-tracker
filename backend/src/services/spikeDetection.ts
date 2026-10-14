@@ -3,8 +3,8 @@
  * bought views. The flag is informational (shown to the brand); it does not
  * block payouts. A production system would hold flagged payouts for review.
  */
-export const SPIKE_MIN_GAIN = 50_000; // ignore small jumps
-export const SPIKE_MAX_VIEWS_PER_MINUTE = 5_000;
+export const SPIKE_MIN_GAIN = 100_000; // ignore small jumps
+export const SPIKE_MAX_VIEWS_PER_MINUTE = 10_000;
 
 export function isViewSpike(previousViews: number, newViews: number, elapsedMs: number): boolean {
   const gained = newViews - previousViews;

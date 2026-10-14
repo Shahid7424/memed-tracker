@@ -179,7 +179,7 @@ describe('isViewSpike', () => {
     expect(isViewSpike(0, 100_000, minute)).toBe(true);
   });
   it('ignores small jumps and slow growth', () => {
-    expect(isViewSpike(0, 40_000, 1)).toBe(false);
+    expect(isViewSpike(0, 90_000, 1)).toBe(false);
     expect(isViewSpike(0, 100_000, 60 * minute)).toBe(false);
   });
 });
