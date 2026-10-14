@@ -10,7 +10,8 @@
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "test": "jest --runInBand",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "db:dev": "tsx scripts/dev-db.ts"
   },
   "engines": {
     "node": ">=20.19"
