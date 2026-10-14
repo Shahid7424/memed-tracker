@@ -50,7 +50,9 @@ describe('auth', () => {
     });
     expect(JSON.stringify(signupRes.body)).not.toContain('password');
 
-    const loginRes = await request(app).post('/api/auth/login').send({ email: 'ASHA@example.com', password: 'secret123' });
+    const loginRes = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'ASHA@example.com', password: 'secret123' });
     expect(loginRes.status).toBe(200);
 
     const me = await request(app).get('/api/auth/me').set(auth(loginRes.body.data.token));
@@ -78,8 +80,12 @@ describe('auth', () => {
 
   it('gives the same error for a wrong password and an unknown email', async () => {
     await signup('brand');
-    const wrongPassword = await request(app).post('/api/auth/login').send({ email: `brand${emailCounter}@example.com`, password: 'wrong1234' });
-    const unknown = await request(app).post('/api/auth/login').send({ email: 'nobody@example.com', password: 'secret123' });
+    const wrongPassword = await request(app)
+      .post('/api/auth/login')
+      .send({ email: `brand${emailCounter}@example.com`, password: 'wrong1234' });
+    const unknown = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'nobody@example.com', password: 'secret123' });
     expect(wrongPassword.status).toBe(401);
     expect(unknown.status).toBe(401);
     expect(wrongPassword.body).toEqual(unknown.body);
@@ -89,10 +95,16 @@ describe('auth', () => {
     expect((await request(app).get('/api/auth/me')).status).toBe(401);
     expect((await request(app).get('/api/auth/me').set('Authorization', 'Bearer nonsense')).status).toBe(401);
 
-    const forged = signToken({ id: new Types.ObjectId().toString(), role: 'brand' }, { secret: 'some-other-secret-value', expiresIn: '1h' });
+    const forged = signToken(
+      { id: new Types.ObjectId().toString(), role: 'brand' },
+      { secret: 'some-other-secret-value', expiresIn: '1h' },
+    );
     expect((await request(app).get('/api/auth/me').set(auth(forged))).status).toBe(401);
 
-    const expired = signToken({ id: new Types.ObjectId().toString(), role: 'brand' }, { secret: JWT_SECRET, expiresIn: '-1s' });
+    const expired = signToken(
+      { id: new Types.ObjectId().toString(), role: 'brand' },
+      { secret: JWT_SECRET, expiresIn: '-1s' },
+    );
     const res = await request(app).get('/api/auth/me').set(auth(expired));
     expect(res.status).toBe(401);
     expect(res.body.error.code).toBe('INVALID_TOKEN');
@@ -125,7 +137,11 @@ describe('campaigns', () => {
 
   it('ignores client-supplied spent amount, status and owner', async () => {
     const brand = await signup('brand');
-    const res = await createCampaign(brand.token, { spentAmount: 9_000, status: 'exhausted', brand: new Types.ObjectId().toString() });
+    const res = await createCampaign(brand.token, {
+      spentAmount: 9_000,
+      status: 'exhausted',
+      brand: new Types.ObjectId().toString(),
+    });
     expect(res.status).toBe(201);
     expect(res.body.data).toMatchObject({ spentAmount: 0, status: 'live', brand: { id: brand.id } });
   });
@@ -137,8 +153,24 @@ describe('campaigns', () => {
       [{ totalBudget: 1000.5 }, 'whole number'],
       [{ platform: 'tiktok' }, 'Platform must be'],
       [{ milestones: [] }, 'at least one milestone'],
-      [{ milestones: [{ views: 100, payout: 500 }, { views: 100, payout: 900 }] }, 'same threshold'],
-      [{ milestones: [{ views: 100, payout: 900 }, { views: 200, payout: 500 }] }, 'must pay more'],
+      [
+        {
+          milestones: [
+            { views: 100, payout: 500 },
+            { views: 100, payout: 900 },
+          ],
+        },
+        'same threshold',
+      ],
+      [
+        {
+          milestones: [
+            { views: 100, payout: 900 },
+            { views: 200, payout: 500 },
+          ],
+        },
+        'must pay more',
+      ],
     ];
     for (const [overrides, message] of cases) {
       const res = await createCampaign(brand.token, overrides);
@@ -173,7 +205,7 @@ describe('campaigns', () => {
     expect((await request(app).get(`/api/campaigns/${new Types.ObjectId()}`).set(auth(brand.token))).status).toBe(404);
   });
 
-  it("shows a brand only its own campaigns and submissions", async () => {
+  it('shows a brand only its own campaigns and submissions', async () => {
     const owner = await signup('brand');
     const other = await signup('brand');
     const campaign = (await createCampaign(owner.token)).body.data;
@@ -211,7 +243,12 @@ describe('submissions and payouts end to end', () => {
     expect(earnings.body.data.submissions[0].campaign).toMatchObject({ id: campaign.id, name: 'Diwali drop' });
 
     const dashboard = await request(app).get('/api/campaigns/mine').set(auth(brand.token));
-    expect(dashboard.body.data.summary).toMatchObject({ totalBudget: 6_000, totalSpent: 2_000, totalRemaining: 4_000, totalSubmissions: 1 });
+    expect(dashboard.body.data.summary).toMatchObject({
+      totalBudget: 6_000,
+      totalSpent: 2_000,
+      totalRemaining: 4_000,
+      totalSubmissions: 1,
+    });
     expect(dashboard.body.data.campaigns[0]).toMatchObject({ submissionCount: 1, utilizationPercent: 33 });
 
     const list = await request(app).get(`/api/campaigns/${campaign.id}/submissions`).set(auth(brand.token));
@@ -224,7 +261,11 @@ describe('submissions and payouts end to end', () => {
     const b = await signup('creator');
     const campaign = (await createCampaign(brand.token)).body.data;
 
-    await request(app).post('/api/submissions').set(auth(a.token)).send({ campaignId: campaign.id, postUrl: VIDEO }).expect(201);
+    await request(app)
+      .post('/api/submissions')
+      .set(auth(a.token))
+      .send({ campaignId: campaign.id, postUrl: VIDEO })
+      .expect(201);
     const dup = await request(app)
       .post('/api/submissions')
       .set(auth(b.token))
@@ -245,7 +286,10 @@ describe('submissions and payouts end to end', () => {
     expect(wrongPlatform.status).toBe(400);
     expect(wrongPlatform.body.error.code).toBe('INVALID_POST_URL');
 
-    const asBrand = await request(app).post('/api/submissions').set(auth(brand.token)).send({ campaignId: campaign.id, postUrl: VIDEO });
+    const asBrand = await request(app)
+      .post('/api/submissions')
+      .set(auth(brand.token))
+      .send({ campaignId: campaign.id, postUrl: VIDEO });
     expect(asBrand.status).toBe(403);
   });
 
@@ -253,8 +297,15 @@ describe('submissions and payouts end to end', () => {
     const brand = await signup('brand');
     const creator = await signup('creator');
     const campaign = (await createCampaign(brand.token, { totalBudget: 500 })).body.data;
-    const first = await request(app).post('/api/submissions').set(auth(creator.token)).send({ campaignId: campaign.id, postUrl: VIDEO });
-    await request(app).patch(`/api/submissions/${first.body.data.id}/views`).set(auth(creator.token)).send({ views: 10_000 }).expect(200);
+    const first = await request(app)
+      .post('/api/submissions')
+      .set(auth(creator.token))
+      .send({ campaignId: campaign.id, postUrl: VIDEO });
+    await request(app)
+      .patch(`/api/submissions/${first.body.data.id}/views`)
+      .set(auth(creator.token))
+      .send({ views: 10_000 })
+      .expect(200);
 
     const res = await request(app)
       .post('/api/submissions')
@@ -271,11 +322,21 @@ describe('submissions and payouts end to end', () => {
     const creator = await signup('creator');
     const id = new Types.ObjectId().toString();
     expect((await request(app).patch(`/api/submissions/${id}/views`).send({ views: 10 })).status).toBe(401);
-    expect((await request(app).patch('/api/submissions/bad-id/views').set(auth(creator.token)).send({ views: 10 })).status).toBe(400);
-    expect((await request(app).patch(`/api/submissions/${id}/views`).set(auth(creator.token)).send({ views: -1 })).status).toBe(400);
-    expect((await request(app).patch(`/api/submissions/${id}/views`).set(auth(creator.token)).send({ views: '100' })).status).toBe(400);
-    expect((await request(app).patch(`/api/submissions/${id}/views`).set(auth(creator.token)).send({ views: 1.5 })).status).toBe(400);
-    expect((await request(app).patch(`/api/submissions/${id}/views`).set(auth(creator.token)).send({ views: 10 })).status).toBe(404);
+    expect(
+      (await request(app).patch('/api/submissions/bad-id/views').set(auth(creator.token)).send({ views: 10 })).status,
+    ).toBe(400);
+    expect(
+      (await request(app).patch(`/api/submissions/${id}/views`).set(auth(creator.token)).send({ views: -1 })).status,
+    ).toBe(400);
+    expect(
+      (await request(app).patch(`/api/submissions/${id}/views`).set(auth(creator.token)).send({ views: '100' })).status,
+    ).toBe(400);
+    expect(
+      (await request(app).patch(`/api/submissions/${id}/views`).set(auth(creator.token)).send({ views: 1.5 })).status,
+    ).toBe(400);
+    expect(
+      (await request(app).patch(`/api/submissions/${id}/views`).set(auth(creator.token)).send({ views: 10 })).status,
+    ).toBe(404);
   });
 
   it('does not let a brand list submissions as a creator', async () => {

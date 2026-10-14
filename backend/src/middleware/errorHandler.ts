@@ -24,7 +24,8 @@ function toAppError(err: unknown): AppError | null {
 
   const parserError = bodyParserError(err);
   if (parserError?.type === 'entity.parse.failed') return AppError.badRequest('Request body is not valid JSON');
-  if (parserError?.type === 'entity.too.large') return new AppError(413, 'PAYLOAD_TOO_LARGE', 'Request body is too large');
+  if (parserError?.type === 'entity.too.large')
+    return new AppError(413, 'PAYLOAD_TOO_LARGE', 'Request body is too large');
   return null;
 }
 

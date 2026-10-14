@@ -38,9 +38,7 @@ export function validateMilestones(milestones: readonly Milestone[]): Milestone[
     }
   }
 
-  const sorted = [...milestones]
-    .map((m) => ({ views: m.views, payout: m.payout }))
-    .sort((a, b) => a.views - b.views);
+  const sorted = [...milestones].map((m) => ({ views: m.views, payout: m.payout })).sort((a, b) => a.views - b.views);
 
   for (let i = 1; i < sorted.length; i++) {
     const prev = sorted[i - 1]!;
@@ -49,9 +47,7 @@ export function validateMilestones(milestones: readonly Milestone[]): Milestone[
       throw AppError.badRequest(`Two milestones use the same threshold (${curr.views} views)`);
     }
     if (curr.payout <= prev.payout) {
-      throw AppError.badRequest(
-        `The ${curr.views}-view milestone must pay more than the ${prev.views}-view milestone`,
-      );
+      throw AppError.badRequest(`The ${curr.views}-view milestone must pay more than the ${prev.views}-view milestone`);
     }
   }
 

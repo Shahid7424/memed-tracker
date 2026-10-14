@@ -105,7 +105,13 @@ async function applyViewUpdate(submissionId: string, views: number, session: Cli
       action: amountPaid > 0 ? 'paid' : blockedAmount > 0 ? 'budget_blocked' : 'none',
       amountPaid,
       blockedAmount,
-      message: describeOutcome(views, previousViews, amountPaid, blockedAmount, charged.totalBudget - charged.spentAmount),
+      message: describeOutcome(
+        views,
+        previousViews,
+        amountPaid,
+        blockedAmount,
+        charged.totalBudget - charged.spentAmount,
+      ),
     },
   };
 }

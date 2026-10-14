@@ -28,7 +28,12 @@ describe('updateSubmissionViews', () => {
     const result = await updateSubmissionViews(submission.id, 10_000);
 
     expect(result.payout).toMatchObject({ action: 'paid', amountPaid: 500, blockedAmount: 0 });
-    expect(result.submission).toMatchObject({ views: 10_000, paidAmount: 500, eligiblePayout: 500, payoutStatus: 'paid' });
+    expect(result.submission).toMatchObject({
+      views: 10_000,
+      paidAmount: 500,
+      eligiblePayout: 500,
+      payoutStatus: 'paid',
+    });
     expect(result.campaign).toMatchObject({ spentAmount: 500, remainingBudget: 9_500, status: 'live' });
     await expectBooksBalance(campaign._id);
   });
@@ -85,7 +90,12 @@ describe('updateSubmissionViews', () => {
     const lower = await updateSubmissionViews(submission.id, 20_000);
     expect(lower.payout.action).toBe('none');
     expect(lower.payout.message).toContain('Views went down');
-    expect(lower.submission).toMatchObject({ views: 20_000, eligiblePayout: 500, paidAmount: 5_000, payoutStatus: 'paid' });
+    expect(lower.submission).toMatchObject({
+      views: 20_000,
+      eligiblePayout: 500,
+      paidAmount: 5_000,
+      payoutStatus: 'paid',
+    });
 
     const backUp = await updateSubmissionViews(submission.id, 100_000);
     expect(backUp.payout.amountPaid).toBe(0);
@@ -186,7 +196,9 @@ describe('updateSubmissionViews', () => {
     const campaign = await makeCampaign(10_000);
     const submission = await makeSubmission(campaign);
     // The campaign is charged first, then saving the submission fails.
-    const saveSpy = jest.spyOn(Submission.prototype, 'save').mockRejectedValueOnce(new Error('simulated write failure'));
+    const saveSpy = jest
+      .spyOn(Submission.prototype, 'save')
+      .mockRejectedValueOnce(new Error('simulated write failure'));
 
     await expect(updateSubmissionViews(submission.id, 50_000)).rejects.toThrow('simulated write failure');
     saveSpy.mockRestore();

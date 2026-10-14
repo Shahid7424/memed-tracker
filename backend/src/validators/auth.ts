@@ -1,11 +1,7 @@
 import { z } from 'zod';
 import { ROLES } from '../types/domain';
 
-const email = z
-  .string()
-  .trim()
-  .toLowerCase()
-  .pipe(z.email('Enter a valid email address').max(254));
+const email = z.string().trim().toLowerCase().pipe(z.email('Enter a valid email address').max(254));
 
 export const signupSchema = z.object({
   name: z.string().trim().min(2, 'Name must be at least 2 characters').max(80),
